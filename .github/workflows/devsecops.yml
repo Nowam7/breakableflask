@@ -1,5 +1,6 @@
 name: Automatisation des tests DevSecOps
 on: push
+
 jobs:
   Dependances:
     runs-on: ubuntu-latest
@@ -13,13 +14,24 @@ jobs:
           scan-type: 'fs'
           scan-ref: 'requirements.txt'
           severity: 'CRITICAL,HIGH'
+
   Dockerfile:
     runs-on: ubuntu-latest
     needs: Dependances
     steps:
-      - name: Test Dockerfile
-        run: |
-          echo "ecrire ici le scrypt de contrôle du Dockerfile"
+      - name: Checkout du code
+        uses: actions/checkout@v4
+      - name: Analyse des bonnes pratiques (Hadolint)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+      - name: Analyse de sécurité du Dockerfile (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+
   Deploy:
     runs-on: ubuntu-latest
     needs: Dockerfile
